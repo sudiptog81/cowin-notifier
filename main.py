@@ -1,4 +1,5 @@
 import os
+import re
 import asyncio
 import discord
 import textwrap
@@ -154,12 +155,11 @@ async def on_message(message: discord.Message) -> None:
         if message.content.split(' ')[0][-1] != 'e':
             date = (
                 datetime.today()
-                + timedelta(days=int(message.content.split(' ')[0][-1]))
+                + timedelta(days=int(re.findall('[0-9]+', message.content.split(' ')[0])[0]))
             ).strftime(r'%d-%m-%Y')
         else:
             date = datetime.today().strftime(r'%d-%m-%Y')
         await send_vaccination_slots(message, pincodes, date)
-
 
 if __name__ == '__main__':
     client.run(os.environ.get('DISCORD_TOKEN'))
