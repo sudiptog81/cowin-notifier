@@ -37,7 +37,6 @@ async def setup(message: discord.Message, pincode: str) -> None:
     if (len(pincode) == 0):
         await message.channel.send('No Pincode Specified')
         return
-
     Session = sessionmaker(bind=database.engine)
     session = Session()
     user = session.query(User).filter_by(
@@ -54,7 +53,36 @@ async def setup(message: discord.Message, pincode: str) -> None:
     session.commit()
     session.close_all()
     await message.reply(f'Setup Complete for {pincode}')
-    await mention_users()
+    date = datetime.today().strftime(r'%d-%m-%Y')
+    channel = await message.author.create_dm()
+    if (len(pincode) != 6):
+        await channel.send('Invalid Pincode ' + pincode)
+        return
+    embed = discord.Embed(
+        title=f'Vaccines Available in {pincode} on {date}'
+    )
+    res = requests.get(
+        f'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?pincode={pincode}&date={date}',
+        auth=auth.BearerAuth(os.environ.get('COWIN_TOKEN'))
+    )
+    sessions = res.json()['sessions']
+    if (len(sessions) == 0):
+        await channel.send(f'<@{message.author.id}> No Vaccination Available at {pincode} on {date}')
+        return
+    for center in sessions:
+        embed.add_field(
+            name=center['name'] + ', ' + center['district_name'],
+            value=textwrap.dedent(f'''
+        Minimum Age: {center['min_age_limit']}+
+        Shots Available: {center['available_capacity']}
+        Vaccine Type: {center['vaccine']}
+        Fees: {'Free' if center['fee_type'] == 'Free' else 'Paid (₹' + center['fee'] + ')'}
+        '''),
+            inline=False
+        )
+    embed.set_footer(text='Source: CoWin API')
+    await channel.send(f'<@{message.author.id}>')
+    await channel.send(embed=embed)
 
 
 async def mention_users() -> None:
@@ -134,8 +162,8 @@ async def send_vaccination_slots(message: discord.Message, pincodes: list, date:
 async def on_ready() -> None:
     print(f'Logged in as {client.user}')
     while True:
-        await mention_users()
         await asyncio.sleep(60 * 60 * 20)
+        await mention_users()
 
 
 @client.event
