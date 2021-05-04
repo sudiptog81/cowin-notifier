@@ -269,8 +269,8 @@ async def on_message(message: discord.Message) -> None:
         ).strftime(r'%d-%m-%Y')
 
         pincodes = re.findall('\d{6}', args)
-        districts = ' '.join(re.findall('[A-Z|a-z]+', args)).rstrip()[2:]
-        print(districts)
+        districts = ' '.join(re.findall('[A-Z|a-z]+', args)).rstrip()[2:] \
+            if (days != 0) else ' '.join(re.findall('[A-Z|a-z]+', args)).rstrip()
 
         if (len(pincodes) == 0 and pincode != '' and districts == ''):
             await send_vaccination_slots(message, [pincode], date)
