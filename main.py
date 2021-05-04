@@ -276,7 +276,7 @@ async def on_message(message: discord.Message) -> None:
             await send_vaccination_slots(message, [pincode], date)
             return
 
-        if (len(pincodes) == 0 and (pincode == '' or districts == '')):
+        if (len(pincodes) == 0 and (pincode == '' and districts == '')):
             await message.channel.send('No Pincode/District Specified')
             return
 
