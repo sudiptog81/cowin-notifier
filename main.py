@@ -1,5 +1,6 @@
 import os
 import re
+import pickle
 import asyncio
 import discord
 import textwrap
@@ -14,6 +15,7 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
 
 load_dotenv()
+districts = dict()
 client = discord.Client()
 
 
@@ -69,6 +71,7 @@ async def help_message(message: discord.Message) -> None:
     !vaccine help - Display this help message
     !vaccine setup <pincode> - Register PIN code for Notifications
     !vaccine <pincode> - Check available slots in PIN code
+    !vaccine <district-name> - Check available slots in a District
     !vaccine <n>d <pincode> - Check available slots 'n' days into future
     ```
     '''), inline=False)
@@ -142,13 +145,13 @@ async def send_vaccination_slots(message: discord.Message, pincodes: list, date:
         )
         sessions = res.json()['sessions']
         if (len(sessions) == 0):
-            await message.channel.send(f'No Vaccination Available at {pincode} on {date}')
+            await message.channel.send(f'No Vaccination Available in {pincode} on {date}')
             return
         for center in sessions:
             embed.add_field(
                 name=center['name'] + ', ' + center['district_name'],
                 value=textwrap.dedent(f'''
-                Minimum Age: {center['min_age_limit']}+
+                Minimum Age: {center['min_age_limit']}
                 Shots Available: {center['available_capacity']}
                 Vaccine Type: {center['vaccine']}
                 Fees: {'Free' if center['fee_type'] == 'Free' else 'Paid (₹' + center['fee'] + ')'}
@@ -157,6 +160,33 @@ async def send_vaccination_slots(message: discord.Message, pincodes: list, date:
             )
         embed.set_footer(text='Source: CoWin API')
         await message.channel.send(embed=embed)
+
+
+async def send_vaccination_slots_by_district(message: discord.Message, district: str, date: str) -> None:
+    embed = discord.Embed(
+        title=f'Vaccines Available in {district.upper()} on {date}'
+    )
+    res = requests.get(
+        f'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByDistrict?district_id={districts[district]}&date={date}',
+        auth=auth.BearerAuth(os.environ.get('COWIN_TOKEN'))
+    )
+    sessions = res.json()['sessions']
+    if (len(sessions) == 0):
+        await message.channel.send(f'No Vaccination Available in {district.upper()} on {date}')
+        return
+    for center in sessions[:25]:
+        embed.add_field(
+            name=f'''{center['name']}, {center['district_name']} (PIN: {center['pincode']})''',
+            value=textwrap.dedent(f'''
+            Minimum Age: {center['min_age_limit']}
+            Shots Available: {center['available_capacity']}
+            Vaccine Type: {center.get('vaccine', '')}
+            Fees: {center['fee_type']} (₹{center['fee']})
+            '''),
+            inline=False
+        )
+    embed.set_footer(text='Source: CoWin API | Showing the First 25 Results')
+    await message.channel.send(embed=embed)
 
 
 async def send_dm(channel: discord.TextChannel, discord_tag: str, pincode: str, date: str) -> None:
@@ -175,16 +205,23 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, pincode: str, 
         embed.add_field(
             name=center['name'] + ', ' + center['district_name'],
             value=textwrap.dedent(f'''
-        Minimum Age: {center['min_age_limit']}+
+        Minimum Age: {center['min_age_limit']}
         Shots Available: {center['available_capacity']}
-        Vaccine Type: {center['vaccine']}
-        Fees: {'Free' if center['fee_type'] == 'Free' else 'Paid (₹' + center['fee'] + ')'}
+        Vaccine Type: {center.get('vaccine', '')}
+        Fees: {center['fee_type']} (₹{center['fee']})
         '''),
             inline=False
         )
     embed.set_footer(text='Source: CoWin API')
     await channel.send(f'<@{discord_tag}>')
     await channel.send(embed=embed)
+
+
+def search_district_by_keyword(keywords: list) -> str:
+    for district in districts:
+        if (keywords in district):
+            return district
+    return ''
 
 
 @client.event
@@ -223,8 +260,8 @@ async def on_message(message: discord.Message) -> None:
         args = message.content.split(' ', 1)[1] \
             if (len(message.content.split(' ', 1)) == 2) else ''
 
-        if (len(re.findall('^\d{1,2}d', args)) != 0):
-            days = re.findall('^\d{1,2}d', args)[0].rstrip()[:-1]
+        if (len(re.findall('^\d{1,3}d', args)) != 0):
+            days = re.findall('^\d{1,3}d', args)[0].rstrip()[:-1]
 
         date = (
             datetime.today()
@@ -232,19 +269,31 @@ async def on_message(message: discord.Message) -> None:
         ).strftime(r'%d-%m-%Y')
 
         pincodes = re.findall('\d{6}', args)
+        districts = ' '.join(re.findall('[A-Z|a-z]+', args)).rstrip()[2:]
+        print(districts)
 
-        print(days, pincodes)
-
-        if (len(pincodes) == 0 and pincode != ''):
+        if (len(pincodes) == 0 and pincode != '' and districts == ''):
             await send_vaccination_slots(message, [pincode], date)
             return
 
-        if (len(pincodes) == 0 and pincode == ''):
-            await message.channel.send('No Pincode Specified')
+        if (len(pincodes) == 0 and (pincode == '' or districts == '')):
+            await message.channel.send('No Pincode/District Specified')
             return
 
         if (len(pincodes) != 0):
             await send_vaccination_slots(message, pincodes, date)
+            return
+
+        if (len(districts) != 0):
+            district = search_district_by_keyword(districts.lower())
+            if (district == ''):
+                await message.channel.send('No Such District Found')
+                return
+            await send_vaccination_slots_by_district(message, district, date)
+            return
+
 
 if __name__ == '__main__':
+    with open('districts.pkl', 'rb') as file:
+        districts = pickle.load(file)
     client.run(os.environ.get('DISCORD_TOKEN'))

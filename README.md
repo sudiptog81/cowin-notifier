@@ -18,17 +18,17 @@ Bot: Vaccines Available in 110001 on 04-05-2021
      ...
 ```
 
-You can also check `n` days into the future by using the `!vaccine <n>d <pincode>` format.
+You can also check `n` days into the future by using the `!vaccine <n>d` prefix.
 
 ```txt
-You: !vaccine 10d 1100001
-Bot: Vaccines Available in 110001 on 14-05-2021
+You: !vaccine 10d Pune
+Bot: Vaccines Available in PUNE on 14-05-2021
      ...
-     MCW Reading Road NDMC PHC, New Delhi
-     Minimum Age: 45+
-     Shots Available: 100
-     Vaccine Type: COVAXIN
-     Fees: Free
+     PHC Dorlewadi, Pune (PIN: 413102)
+     Minimum Age: 45
+     Shots Available: 44
+     Vaccine Type: COVISHIELD
+     Fees: Free (₹0)
      ...
 ```
 
@@ -52,6 +52,7 @@ Bot: Vaccine Availability in <pincode> on <date + 10d> ...
 !vaccine help - Display this help message
 !vaccine setup <pincode> - Register PIN code for Notifications
 !vaccine <pincode> - Check available slots in PIN code
+!vaccine <district-name> - Check available slots in a District
 !vaccine <n>d <pincode> - Check available slots 'n' days into future
 ```
 
