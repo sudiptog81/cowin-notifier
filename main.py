@@ -70,14 +70,6 @@ async def help_message(message: discord.Message) -> None:
 
     ```txt
     You: !vaccine 10d Pune 18
-    Bot: Vaccines Available in PUNE on 14-05-2021
-     ...
-     PHC Dorlewadi, Pune (PIN: 413102)
-     Minimum Age: 18
-     Shots Available: 4
-     Vaccine Type: COVAXIN
-     Fees: Free (₹0)
-     ...
     ```
 
     '''), inline=False)
@@ -316,8 +308,6 @@ async def on_message(message: discord.Message) -> None:
             min_age = 18 if int(min_age[0]) < 45 else 45
         else:
             min_age = 45
-
-        print(min_age, keywords)
 
         if (len(pincodes) == 0 and pincode != '' and keywords == ''):
             await send_vaccination_slots(message, [pincode], date, min_age)

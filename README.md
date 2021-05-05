@@ -66,12 +66,9 @@ Fees: Free (₹0)
 !vaccine help - Display this help message
 !vaccine setup <pincode> - Register PIN code for Notifications
 !vaccine setup <pincode> <age> - Register PIN code and Age for Notifications
-!vaccine <pincode> - Check available slots in PIN code
-!vaccine <pincode> <age> - Check available slots in PIN code for a given age
-!vaccine <district-name> - Check available slots in a District
-!vaccine <district-name> <age> - Check available slots in a District for a given age
-!vaccine <n>d <pincode> - Check available slots 'n' days into future
-!vaccine <n>d <pincode> <age> - Check available slots 'n' days into future for a given age
+!vaccine <pincode> <age?> - Check available slots in PIN code, optionally for an age
+!vaccine <district-name> <age?> - Check available slots in a District, optionally for an age
+!vaccine <n>d <pincode> <age?> - Check available slots 'n' days into future, optionally for an age
 ```
 
 ## Quick Start
