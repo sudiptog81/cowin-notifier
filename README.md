@@ -46,14 +46,32 @@ You: !vaccine 10d
 Bot: Vaccine Availability in <pincode> on <date + 10d> ...
 ```
 
+You can also filter vaccination centres by age as shown below:
+
+```txt
+You: !vaccine 10d Pune 18
+Bot: Vaccines Available in PUNE on 14-05-2021
+...
+PHC Dorlewadi, Pune (PIN: 413102)
+Minimum Age: 18
+Shots Available: 4
+Vaccine Type: COVAXIN
+Fees: Free (₹0)
+...
+```
+
 ## Help
 
 ```txt
 !vaccine help - Display this help message
 !vaccine setup <pincode> - Register PIN code for Notifications
+!vaccine setup <pincode> <age> - Register PIN code and Age for Notifications
 !vaccine <pincode> - Check available slots in PIN code
+!vaccine <pincode> <age> - Check available slots in PIN code for a given age
 !vaccine <district-name> - Check available slots in a District
+!vaccine <district-name> <age> - Check available slots in a District for a given age
 !vaccine <n>d <pincode> - Check available slots 'n' days into future
+!vaccine <n>d <pincode> <age> - Check available slots 'n' days into future for a given age
 ```
 
 ## Quick Start
