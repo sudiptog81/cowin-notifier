@@ -17,6 +17,9 @@ from datetime import datetime, timedelta
 load_dotenv()
 districts = dict()
 client = discord.Client()
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36'
+}
 
 
 async def help_message(message: discord.Message) -> None:
@@ -154,7 +157,7 @@ async def send_vaccination_slots(message: discord.Message, pincodes: list, date:
         )
         res = requests.get(
             f'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?pincode={pincode}&date={date}',
-            auth=auth.BearerAuth(os.environ.get('COWIN_TOKEN'))
+            headers=headers
         )
         sessions = res.json()['sessions']
         if (len(sessions) == 0):
@@ -168,7 +171,7 @@ async def send_vaccination_slots(message: discord.Message, pincodes: list, date:
                     Minimum Age: {center['min_age_limit']}
                     Shots Available: {center['available_capacity']}
                     Vaccine Type: {center['vaccine']}
-                    Fees: {'Free' if center['fee_type'] == 'Free' else 'Paid (₹' + center['fee'] + ')'}
+                    Fees: {center['fee_type']} (₹{center['fee']})
                     '''),
                     inline=False
                 )
@@ -185,7 +188,7 @@ async def send_vaccination_slots_by_district(message: discord.Message, district:
     )
     res = requests.get(
         f'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByDistrict?district_id={districts[district]}&date={date}',
-        auth=auth.BearerAuth(os.environ.get('COWIN_TOKEN'))
+        headers=headers
     )
     sessions = res.json()['sessions']
     if (len(sessions) == 0):
@@ -216,7 +219,7 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, pincode: str, 
     )
     res = requests.get(
         f'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?pincode={pincode}&date={date}',
-        auth=auth.BearerAuth(os.environ.get('COWIN_TOKEN'))
+        headers=headers
     )
     sessions = res.json()['sessions']
     if (len(sessions) == 0):
