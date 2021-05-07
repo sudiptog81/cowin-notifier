@@ -146,6 +146,7 @@ async def mention_users() -> None:
             continue
 
         await send_dm(channel, user.discord_tag, user.pincode, date, user.min_age)
+        await asyncio.sleep(10)
     session.close_all()
 
 
@@ -232,7 +233,8 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, pincode: str, 
     count = 0
     for center in centers:
         for session in center['sessions']:
-            if (session['available_capacity'] != 0):
+            if (int(session['min_age_limit']) == min_age
+                    and session['available_capacity'] != 0):
                 if count > 24:
                     break
                 embed.add_field(
@@ -270,8 +272,8 @@ async def on_ready() -> None:
         )
     )
     while True:
-        await mention_users()
         await asyncio.sleep(60 * 60)
+        await mention_users()
 
 
 @client.event
@@ -290,7 +292,7 @@ async def on_message(message: discord.Message) -> None:
         if (len(min_age) != 0):
             min_age = 18 if int(min_age[0]) < 45 else 45
         else:
-            min_age = 45
+            min_age = 18
         await setup(message, pincode, min_age)
 
     elif message.content.startswith('!vaccine otp'):
