@@ -145,15 +145,13 @@ async def mention_users() -> None:
         (datetime.today() + timedelta(days=7)).strftime(r'%d-%m-%Y'),
         (datetime.today() + timedelta(days=14)).strftime(r'%d-%m-%Y')
     ]
-    for date in dates:
-        for user in users:
-            _user = await client.fetch_user(int(user.discord_tag))
-            channel = await _user.create_dm()
-
-            if (len(user.pincode) != 6):
-                await channel.send('Invalid Pincode ' + user.pincode)
-                continue
-
+    for user in users:
+        _user = await client.fetch_user(int(user.discord_tag))
+        channel = await _user.create_dm()
+        if (len(user.pincode) != 6):
+            await channel.send('Invalid Pincode ' + user.pincode)
+            break
+        for date in dates:
             await send_dm(channel, user.discord_tag, user.pincode, date, user.min_age)
             await asyncio.sleep(10)
     session.close()
