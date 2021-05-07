@@ -69,6 +69,9 @@ Fees: Free (₹0)
 !vaccine <pincode> <age?> - Check available slots in PIN code, optionally for an age
 !vaccine <district-name> <age?> - Check available slots in a District, optionally for an age
 !vaccine <n>d <pincode> <age?> - Check available slots 'n' days into future, optionally for an age
+!vaccine otp <mobile> - Generate a CoWin OTP
+!vaccine verify <mobile> <otp> - Verify the OTP and authenticate the bot
+!vaccine me <mobile> - Get details of beneficiaries linked with the mobile number
 ```
 
 ## Quick Start
