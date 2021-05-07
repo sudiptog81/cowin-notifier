@@ -263,6 +263,13 @@ def search_district_by_keyword(keywords: list) -> str:
 @client.event
 async def on_ready() -> None:
     print(f'Logged in as {client.user}')
+    await client.change_presence(
+        status=discord.Status.online,
+        activity=discord.Activity(
+            type=discord.ActivityType.listening,
+            name='!vaccine help'
+        )
+    )
     while True:
         await mention_users()
         await asyncio.sleep(60 * 60)
@@ -274,8 +281,12 @@ async def on_message(message: discord.Message) -> None:
         return
 
     if message.content.startswith('!vaccine setup'):
-        pincode = message.content.split(' ')[2]
         args = ' '.join(message.content.split(' '))
+        pincodes = re.findall('\d{6}', args)
+        if (len(pincodes) == 0):
+            await message.reply('No PIN code mentioned')
+            return
+        pincode = pincodes[0]
         min_age = re.findall(' \d{2}$', args)
         if (len(min_age) != 0):
             min_age = 18 if int(min_age[0]) < 45 else 45
@@ -284,7 +295,12 @@ async def on_message(message: discord.Message) -> None:
         await setup(message, pincode, min_age)
 
     elif message.content.startswith('!vaccine otp'):
-        mobile = message.content.split(' ')[2]
+        args = ' '.join(message.content.split(' '))
+        mobiles = re.findall(' \d{10}$', args)
+        if (len(mobiles) == 0):
+            await message.reply('No Mobile Number mentioned')
+            return
+        mobile = mobiles[0][1:]
         res = requests.post(
             f'https://cdn-api.co-vin.in/api/v2/auth/generateMobileOTP',
             json={'mobile': f'{mobile}',
@@ -295,12 +311,23 @@ async def on_message(message: discord.Message) -> None:
         await message.reply('OTP sent to your phone')
 
     elif message.content.startswith('!vaccine verify'):
-        mobile = message.content.split(' ')[2]
+        args = ' '.join(message.content.split(' '))
+
+        mobiles = re.findall(' \d{10}', args)
+        if (len(mobiles) == 0):
+            await message.reply('No Mobile Number mentioned')
+            return
+        mobile = mobiles[0][1:]
+
         if mobile not in txns:
             await message.reply('Retry to send OTP and then verify')
             return
 
-        otp = message.content.split(' ')[3]
+        otps = re.findall(' \d{6}$', args)
+        if (len(otps) == 0):
+            await message.reply('No OTP mentioned')
+            return
+        otp = otps[0][1:]
 
         res = requests.post(
             f'https://cdn-api.co-vin.in/api/v2/auth/validateMobileOtp',
