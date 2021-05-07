@@ -232,8 +232,7 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, pincode: str, 
     count = 0
     for center in centers:
         for session in center['sessions']:
-            if (int(session['min_age_limit']) == min_age
-                    and session['available_capacity'] != 0):
+            if (session['available_capacity'] != 0):
                 if count > 24:
                     break
                 embed.add_field(
