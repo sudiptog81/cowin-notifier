@@ -347,7 +347,14 @@ async def on_message(message: discord.Message) -> None:
         '''))
 
     elif message.content.startswith('!vaccine me'):
-        mobile = message.content.split(' ')[2]
+        args = ' '.join(message.content.split(' '))
+
+        mobiles = re.findall(' \d{10}', args)
+        if (len(mobiles) == 0):
+            await message.reply('No Mobile Number mentioned')
+            return
+        mobile = mobiles[0][1:]
+
         if mobile not in tokens:
             await message.reply('Reauthenticate by sending OTP and verifying')
             return
