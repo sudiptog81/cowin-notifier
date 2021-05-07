@@ -219,35 +219,38 @@ async def send_vaccination_slots_by_district(message: discord.Message, district:
 
 
 async def send_dm(channel: discord.TextChannel, discord_tag: str, pincode: str, date: str, min_age: int) -> None:
-    embed = discord.Embed(
-        title=f'Vaccines Available in {pincode} on {date}'
-    )
     res = requests.get(
-        f'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/findByPin?pincode={pincode}&date={date}',
+        f'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode={pincode}&date={date}',
         headers=headers
     )
-    sessions = res.json()['sessions']
-    if (len(sessions) == 0):
-        await channel.send(f'<@{discord_tag}> No Vaccination Available in {pincode} on {date}')
+    centers = res.json()['centers']
+    if (len(centers) == 0):
         return
-    for center in sessions:
-        if (int(center['min_age_limit']) == min_age):
-            embed.add_field(
-                name=center['name'] + ', ' + center['district_name'],
-                value=textwrap.dedent(f'''
-            Minimum Age: {center['min_age_limit']}
-            Shots Available: {center['available_capacity']}
-            Vaccine Type: {center.get('vaccine', '')}
-            Fees: {center['fee_type']} (₹{center['fee']})
-            '''),
-                inline=False
-            )
+    embed = discord.Embed(
+        title=f'''Vaccines Available in {pincode} in Next 7 Days'''
+    )
+    count = 0
+    for center in centers:
+        for session in center['sessions']:
+            if (int(session['min_age_limit']) == min_age
+                    and session['available_capacity'] != 0):
+                if count > 24:
+                    break
+                embed.add_field(
+                    name=f'''{center['name']}, {center['district_name']} ({session['date']})''',
+                    value=textwrap.dedent(f'''
+                    Minimum Age: {session['min_age_limit']}
+                    Shots Available: {session['available_capacity']}
+                    Vaccine Type: {session.get('vaccine', '')}
+                    Fees: {center['fee_type']}
+                    '''),
+                    inline=False
+                )
+                count += 1
     embed.set_footer(text='Source: CoWin API')
     if (len(embed.fields) != 0):
         await channel.send(f'<@{discord_tag}>')
         await channel.send(embed=embed)
-    else:
-        await channel.send(f'No Vaccination Available in {pincode} on {date} for given criteria')
 
 
 def search_district_by_keyword(keywords: list) -> str:
@@ -261,8 +264,8 @@ def search_district_by_keyword(keywords: list) -> str:
 async def on_ready() -> None:
     print(f'Logged in as {client.user}')
     while True:
-        await asyncio.sleep(60 * 60 * 20)
         await mention_users()
+        await asyncio.sleep(60 * 60)
 
 
 @client.event
