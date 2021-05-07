@@ -4,7 +4,6 @@ import pickle
 import asyncio
 import discord
 import textwrap
-from discord import embeds
 import requests
 from requests.api import head
 
@@ -141,17 +140,22 @@ async def mention_users() -> None:
     Session = sessionmaker(bind=database.engine)
     session = Session()
     users = session.query(User)
-    date = datetime.today().strftime(r'%d-%m-%Y')
-    for user in users:
-        _user = await client.fetch_user(int(user.discord_tag))
-        channel = await _user.create_dm()
+    dates = [
+        datetime.today().strftime(r'%d-%m-%Y'),
+        (datetime.today() + timedelta(days=7)).strftime(r'%d-%m-%Y'),
+        (datetime.today() + timedelta(days=14)).strftime(r'%d-%m-%Y')
+    ]
+    for date in dates:
+        for user in users:
+            _user = await client.fetch_user(int(user.discord_tag))
+            channel = await _user.create_dm()
 
-        if (len(user.pincode) != 6):
-            await channel.send('Invalid Pincode ' + user.pincode)
-            continue
+            if (len(user.pincode) != 6):
+                await channel.send('Invalid Pincode ' + user.pincode)
+                continue
 
-        await send_dm(channel, user.discord_tag, user.pincode, date, user.min_age)
-        await asyncio.sleep(10)
+            await send_dm(channel, user.discord_tag, user.pincode, date, user.min_age)
+            await asyncio.sleep(10)
     session.close()
 
 
@@ -241,7 +245,7 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, pincode: str, 
         if (len(centers) == 0):
             return
         embed = discord.Embed(
-            title=f'''Vaccines Available in {pincode} in Next 7 Days'''
+            title=f'''Vaccines Available in {pincode} in Next Few Days'''
         )
         count = 0
         for center in centers:
