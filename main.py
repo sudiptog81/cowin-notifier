@@ -4,17 +4,22 @@ import pickle
 import asyncio
 import discord
 import textwrap
+from discord import embeds
 import requests
+from requests.api import head
 
 import auth
 import database
 from model import *
 
+from hashlib import sha256
 from dotenv import load_dotenv
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
 
 load_dotenv()
+txns = dict()
+tokens = dict()
 districts = dict()
 client = discord.Client()
 headers = {
@@ -274,6 +279,79 @@ async def on_message(message: discord.Message) -> None:
         else:
             min_age = 45
         await setup(message, pincode, min_age)
+
+    elif message.content.startswith('!vaccine otp'):
+        mobile = message.content.split(' ')[2]
+        res = requests.post(
+            f'https://cdn-api.co-vin.in/api/v2/auth/generateMobileOTP',
+            json={'mobile': f'{mobile}',
+                  'secret': os.environ.get('COWIN_SECRET')},
+            headers=headers
+        )
+        txns[mobile] = res.json()['txnId']
+        await message.reply('OTP sent to your phone')
+
+    elif message.content.startswith('!vaccine verify'):
+        mobile = message.content.split(' ')[2]
+        if mobile not in txns:
+            await message.reply('Retry to send OTP and then verify')
+            return
+
+        otp = message.content.split(' ')[3]
+
+        res = requests.post(
+            f'https://cdn-api.co-vin.in/api/v2/auth/validateMobileOtp',
+            json={'otp': sha256(otp.encode('utf-8')).hexdigest(),
+                  'txnId': txns[mobile]},
+            headers=headers
+        )
+
+        tokens[mobile] = res.json()['token']
+
+        await message.reply(textwrap.dedent(f'''
+            OTP Verified
+            ```txt
+            {res.json()['token']}
+            ```
+        '''))
+
+    elif message.content.startswith('!vaccine me'):
+        mobile = message.content.split(' ')[2]
+        if mobile not in tokens:
+            await message.reply('Reauthenticate by sending OTP and verifying')
+            return
+
+        res = requests.get(
+            f'https://cdn-api.co-vin.in/api/v2/appointment/beneficiaries',
+            auth=auth.BearerAuth(tokens[mobile]),
+            headers=headers
+        )
+
+        people = res.json()['beneficiaries'][0]
+        embed = discord.Embed(
+            title=f'''{people['name']}'''
+        )
+        embed.add_field(
+            name='Year of Birth',
+            value=people['birth_year'],
+            inline=False
+        )
+        embed.add_field(
+            name='Gender',
+            value=people['gender'],
+            inline=False
+        )
+        embed.add_field(
+            name='ID Proof',
+            value=f'''{people['photo_id_type']} ({people['photo_id_number']})''',
+            inline=False
+        )
+        embed.add_field(
+            name='Status',
+            value=people['vaccination_status'],
+            inline=False
+        )
+        await message.reply(embed=embed)
 
     elif message.content.startswith('!vaccine help'):
         await help_message(message)
