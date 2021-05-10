@@ -124,15 +124,15 @@ async def setup(message: discord.Message, pincode: str, min_age: int) -> None:
         print(f'=> Registered {message.author.display_name}...')
         date = datetime.today().strftime(r'%d-%m-%Y')
         channel = await message.author.create_dm()
-
+        discord_name = f'@{message.author.display_name}#{message.author.discriminator}'
         if (len(pincode) != 6):
             await channel.send('Invalid Pincode ' + pincode)
             return
-        await send_dm(channel, message.author.id, pincode, date, min_age)
+        await send_dm(channel, message.author.id, pincode, date, min_age, discord_name)
     except Exception as e:
-        print(e)
+        print(f'=> Error: {e}')
         session.rollback()
-        await message.reply(f'=> Error: Could not complete the setup. Contact @ScientificGhosh on Twitter.')
+        await message.reply('Could not complete the setup. Contact @ScientificGhosh on Twitter.')
     finally:
         session.close()
 
