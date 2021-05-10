@@ -120,7 +120,7 @@ async def setup(message: discord.Message, pincode: str, min_age: int) -> None:
             user.min_age = min_age
 
         session.commit()
-        await message.reply(f'=> Setup Complete for {pincode}')
+        await message.reply(f'Setup Complete for {pincode}')
         print(f'=> Registered {message.author.display_name}...')
         date = datetime.today().strftime(r'%d-%m-%Y')
         channel = await message.author.create_dm()
