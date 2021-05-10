@@ -129,7 +129,8 @@ async def setup(message: discord.Message, pincode: str, min_age: int) -> None:
             await channel.send('Invalid Pincode ' + pincode)
             return
         await send_dm(channel, message.author.id, pincode, date, min_age)
-    except:
+    except Exception as e:
+        print(e)
         session.rollback()
         await message.reply(f'Could not complete the setup. Contact @ScientificGhosh on Twitter.')
     finally:
@@ -196,7 +197,8 @@ async def send_vaccination_slots(message: discord.Message, pincodes: list, date:
                 await message.channel.send(embed=embed)
             else:
                 await message.channel.send(f'No Vaccination Available in {pincode} on {date} for given criteria.')
-    except:
+    except Exception as e:
+        print(e)
         await message.channel.send('Internal Error. Contact @ScientificGhosh on Twitter.')
 
 
@@ -231,7 +233,8 @@ async def send_vaccination_slots_by_district(message: discord.Message, district:
             await message.channel.send(embed=embed)
         else:
             await message.channel.send(f'No Vaccination Available in {district.upper()} on {date} for given criteria.')
-    except:
+    except Exception as e:
+        print(e)
         await message.channel.send('Internal Error. Contact @ScientificGhosh on Twitter.')
 
 
@@ -269,7 +272,8 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, pincode: str, 
         if (len(embed.fields) != 0):
             await channel.send(f'<@{discord_tag}>')
             await channel.send(embed=embed)
-    except:
+    except Exception as e:
+        print(e)
         await channel.send('Internal Error. Contact @ScientificGhosh on Twitter.')
 
 
