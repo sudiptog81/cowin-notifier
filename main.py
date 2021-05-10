@@ -121,7 +121,7 @@ async def setup(message: discord.Message, pincode: str, min_age: int) -> None:
 
         session.commit()
         await message.reply(f'Setup Complete for {pincode}')
-
+        print(f'Registered {message.author.display_name}...')
         date = datetime.today().strftime(r'%d-%m-%Y')
         channel = await message.author.create_dm()
 
@@ -137,6 +137,7 @@ async def setup(message: discord.Message, pincode: str, min_age: int) -> None:
 
 
 async def mention_users() -> None:
+    print('Sending Notifications...')
     Session = sessionmaker(bind=database.engine)
     session = Session()
     users = session.query(User)
@@ -147,6 +148,7 @@ async def mention_users() -> None:
     ]
     for user in users:
         _user = await client.fetch_user(int(user.discord_tag))
+        print(f'=> {_user.display_name}')
         channel = await _user.create_dm()
         if (len(user.pincode) != 6):
             await channel.send('Invalid Pincode ' + user.pincode)
@@ -258,7 +260,7 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, pincode: str, 
                         Minimum Age: {session['min_age_limit']}
                         Shots Available: {session['available_capacity']}
                         Vaccine Type: {session.get('vaccine', '')}
-                        Fees: {center['fee_type']}
+                        Fees: {center['fee_type']} (₹{center['fee']})
                         '''),
                         inline=False
                     )
@@ -290,7 +292,7 @@ async def on_ready() -> None:
     )
     while True:
         await mention_users()
-        await asyncio.sleep(60 * 30)
+        await asyncio.sleep(60 * 5)
 
 
 @client.event
