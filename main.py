@@ -120,8 +120,8 @@ async def setup(message: discord.Message, pincode: str, min_age: int) -> None:
             user.min_age = min_age
 
         session.commit()
-        await message.reply(f'Setup Complete for {pincode}')
-        print(f'Registered {message.author.display_name}...')
+        await message.reply(f'=> Setup Complete for {pincode}')
+        print(f'=> Registered {message.author.display_name}...')
         date = datetime.today().strftime(r'%d-%m-%Y')
         channel = await message.author.create_dm()
 
@@ -132,13 +132,13 @@ async def setup(message: discord.Message, pincode: str, min_age: int) -> None:
     except Exception as e:
         print(e)
         session.rollback()
-        await message.reply(f'Could not complete the setup. Contact @ScientificGhosh on Twitter.')
+        await message.reply(f'=> Error: Could not complete the setup. Contact @ScientificGhosh on Twitter.')
     finally:
         session.close()
 
 
 async def mention_users() -> None:
-    print('Sending Notifications...')
+    print('=> Polling...')
     Session = sessionmaker(bind=database.engine)
     session = Session()
     users = session.query(User)
@@ -149,13 +149,13 @@ async def mention_users() -> None:
     ]
     for user in users:
         _user = await client.fetch_user(int(user.discord_tag))
-        print(f'=> {_user.display_name}')
+        discord_name = f'@{_user.display_name}#{_user.discriminator}'
         channel = await _user.create_dm()
         if (len(user.pincode) != 6):
             await channel.send('Invalid Pincode ' + user.pincode)
             break
         for date in dates:
-            await send_dm(channel, user.discord_tag, user.pincode, date, user.min_age)
+            await send_dm(channel, user.discord_tag, user.pincode, date, user.min_age, discord_name)
             await asyncio.sleep(10)
     session.close()
 
@@ -165,6 +165,9 @@ async def send_vaccination_slots(message: discord.Message, pincodes: list, date:
         await message.channel.send('No Pincode Specified')
         return
     try:
+        print(
+            f'=> Query from @{message.author.display_name}#{message.author.discriminator}'
+        )
         for pincode in pincodes:
             if (len(pincode) != 6):
                 await message.channel.send('Invalid Pincode ' + pincode)
@@ -181,14 +184,15 @@ async def send_vaccination_slots(message: discord.Message, pincodes: list, date:
                 await message.channel.send(f'No Vaccination Available in {pincode} on {date}.')
                 return
             for center in sessions:
-                if (int(center['min_age_limit']) == min_age):
+                if (int(center.get('min_age_limit')) == min_age):
                     embed.add_field(
-                        name=center['name'] + ', ' + center['district_name'],
+                        name=center.get('name') + ', ' +
+                        center.get('district_name'),
                         value=textwrap.dedent(f'''
-                        Minimum Age: {center['min_age_limit']}
-                        Shots Available: {center['available_capacity']}
-                        Vaccine Type: {center['vaccine']}
-                        Fees: {center['fee_type']} (₹{center['fee']})
+                        Minimum Age: {center.get('min_age_limit')}
+                        Shots Available: {center.get('available_capacity')}
+                        Vaccine Type: {center.get('vaccine')}
+                        Fees: {center.get('fee_type')} (₹{center.get('fee')})
                         '''),
                         inline=False
                     )
@@ -198,12 +202,15 @@ async def send_vaccination_slots(message: discord.Message, pincodes: list, date:
             else:
                 await message.channel.send(f'No Vaccination Available in {pincode} on {date} for given criteria.')
     except Exception as e:
-        print(e)
+        print(f'=> Error: {e}')
         await message.channel.send('Internal Error. Contact @ScientificGhosh on Twitter.')
 
 
 async def send_vaccination_slots_by_district(message: discord.Message, district: str, date: str, min_age: int) -> None:
     try:
+        print(
+            f'=> Query from @{message.author.display_name}#{message.author.discriminator}'
+        )
         embed = discord.Embed(
             title=f'Vaccines Available in {district.upper()} on {date}'
         )
@@ -216,14 +223,14 @@ async def send_vaccination_slots_by_district(message: discord.Message, district:
             await message.channel.send(f'No Vaccination Available in {district.upper()} on {date}.')
             return
         for center in sessions[:25]:
-            if (int(center['min_age_limit']) == min_age):
+            if (int(center.get('min_age_limit')) == min_age):
                 embed.add_field(
-                    name=f'''{center['name']}, {center['district_name']} (PIN: {center['pincode']})''',
+                    name=f'''{center.get('name')}, {center.get('district_name')} (PIN: {center.get('pincode')})''',
                     value=textwrap.dedent(f'''
-                    Minimum Age: {center['min_age_limit']}
-                    Shots Available: {center['available_capacity']}
+                    Minimum Age: {center.get('min_age_limit')}
+                    Shots Available: {center.get('available_capacity')}
                     Vaccine Type: {center.get('vaccine', '')}
-                    Fees: {center['fee_type']} (₹{center['fee']})
+                    Fees: {center.get('fee_type')} (₹{center.get('fee')})
                     '''),
                     inline=False
                 )
@@ -238,7 +245,7 @@ async def send_vaccination_slots_by_district(message: discord.Message, district:
         await message.channel.send('Internal Error. Contact @ScientificGhosh on Twitter.')
 
 
-async def send_dm(channel: discord.TextChannel, discord_tag: str, pincode: str, date: str, min_age: int) -> None:
+async def send_dm(channel: discord.TextChannel, discord_tag: str, pincode: str, date: str, min_age: int, discord_name: str) -> None:
     try:
         res = requests.get(
             f'https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?pincode={pincode}&date={date}',
@@ -253,17 +260,17 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, pincode: str, 
         count = 0
         for center in centers:
             for session in center['sessions']:
-                if (int(session['min_age_limit']) == min_age
-                        and session['available_capacity'] != 0):
+                if (int(session.get('min_age_limit')) == min_age
+                        and session.get('available_capacity') != 0):
                     if count > 24:
                         break
                     embed.add_field(
-                        name=f'''{center['name']}, {center['district_name']} ({session['date']})''',
+                        name=f'''{center.get('name')}, {center.get('district_name')} ({session.get('date')})''',
                         value=textwrap.dedent(f'''
-                        Minimum Age: {session['min_age_limit']}
-                        Shots Available: {session['available_capacity']}
+                        Minimum Age: {session.get('min_age_limit')}
+                        Shots Available: {session.get('available_capacity')}
                         Vaccine Type: {session.get('vaccine', '')}
-                        Fees: {center['fee_type']} (₹{center['fee']})
+                        Fees: {center.get('fee_type')} (₹{center.get('fee')})
                         '''),
                         inline=False
                     )
@@ -272,6 +279,7 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, pincode: str, 
         if (len(embed.fields) != 0):
             await channel.send(f'<@{discord_tag}>')
             await channel.send(embed=embed)
+            print(f'... Message sent to {discord_name}')
     except Exception as e:
         print(e)
         await channel.send('Internal Error. Contact @ScientificGhosh on Twitter.')
@@ -390,26 +398,26 @@ async def on_message(message: discord.Message) -> None:
 
         people = res.json()['beneficiaries'][0]
         embed = discord.Embed(
-            title=f'''{people['name']}'''
+            title=f'''{people.get('name')}'''
         )
         embed.add_field(
             name='Year of Birth',
-            value=people['birth_year'],
+            value=people.get('birth_year'),
             inline=False
         )
         embed.add_field(
             name='Gender',
-            value=people['gender'],
+            value=people.get('gender'),
             inline=False
         )
         embed.add_field(
             name='ID Proof',
-            value=f'''{people['photo_id_type']} ({people['photo_id_number']})''',
+            value=f'''{people.get('photo_id_type')} ({people.get('photo_id_number')})''',
             inline=False
         )
         embed.add_field(
             name='Status',
-            value=people['vaccination_status'],
+            value=people.get('vaccination_status'),
             inline=False
         )
         await message.reply(embed=embed)
