@@ -393,6 +393,7 @@ async def on_message(message: discord.Message) -> None:
     elif message.content.split(' ', 1)[0] == '!vaccine':
         days = 0
         district = ''
+        min_age = 45
 
         Session = sessionmaker(bind=database.engine)
         session = Session()
@@ -401,6 +402,7 @@ async def on_message(message: discord.Message) -> None:
         ).first()
         if (user):
             district = user.district
+            min_age = user.min_age
         session.close()
 
         args = message.content.split(' ', 1)[1] \
@@ -418,11 +420,9 @@ async def on_message(message: discord.Message) -> None:
         keywords = ' '.join(re.findall('[A-Z|a-z|()]+', args)).rstrip()[2:] \
             if (days != 0) else ' '.join(re.findall('[A-Z|a-z]+', args)).rstrip()
 
-        min_age = re.findall(' \d{2}$', args)
-        if (len(min_age) != 0):
-            min_age = 18 if int(min_age[0]) < 45 else 45
-        else:
-            min_age = 18
+        min_age_arg = re.findall(' \d{2}$', args)
+        if (len(min_age_arg) != 0):
+            min_age = 18 if int(min_age_arg[0]) < 45 else 45
 
         if (len(pincodes) == 0 and district != '' and keywords == ''):
             await send_vaccination_slots_by_district(message, district, date, min_age)
