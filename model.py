@@ -10,11 +10,8 @@ Base = declarative_base()
 class User(Base):
     __tablename__ = 'users'
     discord_tag = Column(String(50), primary_key=True)
-    pincode = Column(String(6))
+    district = Column(String(255))
     min_age = Column(Integer)
-
-    def __repr__(self):
-        return f'<User(discord_tag=\'{self.discord_tag}\', pincode=\'{self.pincode}\')>'
 
 
 Base.metadata.create_all(database.engine)

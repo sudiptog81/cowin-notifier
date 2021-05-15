@@ -32,18 +32,18 @@ Bot: Vaccines Available in PUNE on 14-05-2021
      ...
 ```
 
-Register a PIN code and use shortcuts. An example dialogue is given below:
+Register a District and use shortcuts. An example dialogue is given below:
 
 ```txt
-You: !vaccine setup <pincode>
-Bot: Setup Complete for <pincode>
+You: !vaccine setup <district>
+Bot: Setup Complete for <district>
 *ping - check DM*
 
 You: !vaccine
-Bot: Vaccine Availability in <pincode> on <date> ...
+Bot: Vaccine Availability in <district> on <date> ...
 
 You: !vaccine 10d
-Bot: Vaccine Availability in <pincode> on <date + 10d> ...
+Bot: Vaccine Availability in <district> on <date + 10d> ...
 ```
 
 You can also filter vaccination centres by age as shown below:
@@ -64,14 +64,16 @@ Fees: Free (₹0)
 
 ```txt
 !vaccine help - Display this help message
-!vaccine setup <pincode> - Register PIN code for Notifications
-!vaccine setup <pincode> <age> - Register PIN code and Age for Notifications
+!vaccine setup <district> - Register District for Notifications
+!vaccine setup <district> <age> - Register District and Age for Notifications
 !vaccine <pincode> <age?> - Check available slots in PIN code, optionally for an age
 !vaccine <district-name> <age?> - Check available slots in a District, optionally for an age
 !vaccine <n>d <pincode> <age?> - Check available slots 'n' days into future, optionally for an age
 !vaccine otp <mobile> - Generate a CoWin OTP
 !vaccine verify <mobile> <otp> - Verify the OTP and authenticate the bot
 !vaccine me <mobile> - Get details of beneficiaries linked with the mobile number
+!vaccine - Check available slots in the District you have registered for
+!vaccine <n>d - Check available slots in the District you have registered for, 'n' days into future
 ```
 
 ## Quick Start
