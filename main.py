@@ -101,7 +101,7 @@ async def unsubscribe(message: discord.Message) -> None:
             await message.reply('You are not subscribed in the first place')
             return
 
-        user.delete()
+        session.delete(user)
         session.commit()
 
         print(f'=> Deleted {message.author.display_name}...')
