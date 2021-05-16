@@ -48,6 +48,7 @@ async def help_message(message: discord.Message) -> None:
     !vaccine me <mobile> - Get details of beneficiaries linked with the mobile number
     !vaccine - Check available slots in the District you have registered for
     !vaccine <n>d - Check available slots in the District you have registered for, 'n' days into future
+    !vaccine unsubscribe - Opt out from notifications
     ```
     '''), inline=False)
     embed.set_footer(text='Author: @radNerd#1693 | GitHub: @sudiptog81')
@@ -84,6 +85,30 @@ async def setup(message: discord.Message, district: str, min_age: int) -> None:
         print(f'=> Error: {e}')
         session.rollback()
         await message.reply('Could not complete the setup. Contact @ScientificGhosh on Twitter.')
+    finally:
+        session.close()
+
+
+async def unsubscribe(message: discord.Message) -> None:
+    try:
+        Session = sessionmaker(bind=database.engine)
+        session = Session()
+        user = session.query(User).filter_by(
+            discord_tag=message.author.id
+        ).first()
+
+        if (not user):
+            await message.reply('You are not subscribed in the first place')
+            return
+
+        user.delete()
+        session.commit()
+
+        print(f'=> Deleted {message.author.display_name}...')
+    except Exception as e:
+        print(f'=> Error: {e}')
+        session.rollback()
+        await message.reply('Could not complete the deregistration. Contact @ScientificGhosh on Twitter.')
     finally:
         session.close()
 
@@ -138,7 +163,7 @@ async def send_vaccination_slots(message: discord.Message, pincodes: list, date:
                         center.get('district_name'),
                         value=textwrap.dedent(f'''
                         Minimum Age: {center.get('min_age_limit')}
-                        Shots Available: {center.get('available_capacity')}
+                        Shots Available: {center.get('available_capacity')} (D1: {center.get('available_capacity_dose1', '-')}; D2: {center.get('available_capacity_dose2', '-')})
                         Vaccine Type: {center.get('vaccine')}
                         Fees: {center.get('fee_type')} (₹{center.get('fee', '-')})
                         '''),
@@ -176,7 +201,7 @@ async def send_vaccination_slots_by_district(message: discord.Message, district:
                     name=f'''{center.get('name')}, {center.get('district_name')} (PIN: {center.get('pincode')})''',
                     value=textwrap.dedent(f'''
                     Minimum Age: {center.get('min_age_limit')}
-                    Shots Available: {center.get('available_capacity')}
+                    Shots Available: {center.get('available_capacity')} (D1: {center.get('available_capacity_dose1', '-')}; D2: {center.get('available_capacity_dose2', '-')})
                     Vaccine Type: {center.get('vaccine', '')}
                     Fees: {center.get('fee_type')} (₹{center.get('fee', '-')})
                     '''),
@@ -216,7 +241,7 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, district: str,
                         name=f'''{center.get('name')}, PIN {center.get('pincode')} ({session.get('date')})''',
                         value=textwrap.dedent(f'''
                         Minimum Age: {session.get('min_age_limit')}
-                        Shots Available: {session.get('available_capacity')}
+                        Shots Available: {session.get('available_capacity')} (D1: {session.get('available_capacity_dose1', '-')}; D2: {session.get('available_capacity_dose2', '-')})
                         Vaccine Type: {session.get('vaccine', '')}
                         Fees: {center.get('fee_type')} (₹{center.get('fee', '-')})
                         '''),
@@ -230,7 +255,6 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, district: str,
                 name='Slot Booking',
                 value='[https://selfregistration.cowin.gov.in/](https://selfregistration.cowin.gov.in/)'
             )
-            await channel.send(f'<@{discord_tag}>')
             await channel.send(embed=embed)
             print(f'... Message sent to {discord_name}')
     except Exception as e:
@@ -287,6 +311,8 @@ async def on_message(message: discord.Message) -> None:
 
         await setup(message, district, min_age)
 
+    elif message.content.startswith('!vaccine unsubscribe'):
+        await unsubscribe(message)
     elif message.content.startswith('!vaccine otp'):
         args = ' '.join(message.content.split(' '))
         mobiles = re.findall(' \d{10}$', args)

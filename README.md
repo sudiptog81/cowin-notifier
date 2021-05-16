@@ -74,6 +74,7 @@ Fees: Free (₹0)
 !vaccine me <mobile> - Get details of beneficiaries linked with the mobile number
 !vaccine - Check available slots in the District you have registered for
 !vaccine <n>d - Check available slots in the District you have registered for, 'n' days into future
+!vaccine unsubscribe - Opt out from notifications
 ```
 
 ## Quick Start
