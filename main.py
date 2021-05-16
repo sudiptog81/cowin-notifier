@@ -163,7 +163,7 @@ async def send_vaccination_slots(message: discord.Message, pincodes: list, date:
                         center.get('district_name'),
                         value=textwrap.dedent(f'''
                         Minimum Age: {center.get('min_age_limit')}
-                        Shots Available: {center.get('available_capacity')} (D1: {center.get('available_capacity_dose1', '-')}; D2: {center.get('available_capacity_dose2', '-')})
+                        Shots Available: {center.get('available_capacity')} (Dose 1: {center.get('available_capacity_dose1', '-')}; Dose 2: {center.get('available_capacity_dose2', '-')})
                         Vaccine Type: {center.get('vaccine')}
                         Fees: {center.get('fee_type')} (₹{center.get('fee', '-')})
                         '''),
@@ -201,7 +201,7 @@ async def send_vaccination_slots_by_district(message: discord.Message, district:
                     name=f'''{center.get('name')}, {center.get('district_name')} (PIN: {center.get('pincode')})''',
                     value=textwrap.dedent(f'''
                     Minimum Age: {center.get('min_age_limit')}
-                    Shots Available: {center.get('available_capacity')} (D1: {center.get('available_capacity_dose1', '-')}; D2: {center.get('available_capacity_dose2', '-')})
+                    Shots Available: {center.get('available_capacity')} (Dose 1: {center.get('available_capacity_dose1', '-')}; Dose 2: {center.get('available_capacity_dose2', '-')})
                     Vaccine Type: {center.get('vaccine', '')}
                     Fees: {center.get('fee_type')} (₹{center.get('fee', '-')})
                     '''),
@@ -241,7 +241,7 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, district: str,
                         name=f'''{center.get('name')}, PIN {center.get('pincode')} ({session.get('date')})''',
                         value=textwrap.dedent(f'''
                         Minimum Age: {session.get('min_age_limit')}
-                        Shots Available: {session.get('available_capacity')} (D1: {session.get('available_capacity_dose1', '-')}; D2: {session.get('available_capacity_dose2', '-')})
+                        Shots Available: {session.get('available_capacity')} (Dose 1: {session.get('available_capacity_dose1', '-')}; Dose 2: {session.get('available_capacity_dose2', '-')})
                         Vaccine Type: {session.get('vaccine', '')}
                         Fees: {center.get('fee_type')} (₹{center.get('fee', '-')})
                         '''),
