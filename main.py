@@ -244,7 +244,7 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, district: str,
                         Minimum Age: {session.get('min_age_limit')}
                         Shots Available: {session.get('available_capacity')} (Dose 1: {session.get('available_capacity_dose1', '-')}; Dose 2: {session.get('available_capacity_dose2', '-')})
                         Vaccine Type: {session.get('vaccine', '')}
-                        Fees: {session.get('fee_type')} (₹{session.get('fee', '-')})
+                        Fees: {center.get('fee_type')} (₹{center.get('fee', '-')})
                         '''),
                         inline=False
                     )
@@ -282,7 +282,7 @@ async def on_ready() -> None:
     )
     while True:
         await mention_users()
-        await asyncio.sleep(60 * 5)
+        await asyncio.sleep(60 * 10)
 
 
 @client.event
