@@ -244,7 +244,7 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, district: str,
                         Minimum Age: {session.get('min_age_limit')}
                         Shots Available: {session.get('available_capacity')} (Dose 1: {session.get('available_capacity_dose1', '-')}; Dose 2: {session.get('available_capacity_dose2', '-')})
                         Vaccine Type: {session.get('vaccine', '')}
-                        Fees: {center.get('fee_type')} (₹{center.get('fee', '-')})
+                        Fees: {session.get('fee_type')} (₹{session.get('fee', '-')})
                         '''),
                         inline=False
                     )
