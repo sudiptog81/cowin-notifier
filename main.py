@@ -104,6 +104,7 @@ async def unsubscribe(message: discord.Message) -> None:
         session.delete(user)
         session.commit()
 
+        await message.reply('You will not receive notifications from now on')
         print(f'=> Deleted {message.author.display_name}...')
     except Exception as e:
         print(f'=> Error: {e}')
