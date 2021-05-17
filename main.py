@@ -283,7 +283,7 @@ async def on_ready() -> None:
     )
     while True:
         await mention_users()
-        await asyncio.sleep(60 * 30)
+        await asyncio.sleep(60 * 10)
 
 
 @client.event
