@@ -236,7 +236,7 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, district: str,
             for session in center['sessions']:
                 if (int(session.get('min_age_limit')) == min_age
                         and (session.get('available_capacity_dose1')
-                             + session.get('available_capacity_dose2')) != 0):
+                             + session.get('available_capacity_dose2')) > 0):
                     if count > 24:
                         break
                     embed.add_field(
