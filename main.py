@@ -235,7 +235,8 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, district: str,
         for center in centers:
             for session in center['sessions']:
                 if (int(session.get('min_age_limit')) == min_age
-                        and session.get('available_capacity') != 0):
+                        and (session.get('available_capacity_dose1')
+                             + session.get('available_capacity_dose2')) != 0):
                     if count > 24:
                         break
                     embed.add_field(
@@ -244,7 +245,7 @@ async def send_dm(channel: discord.TextChannel, discord_tag: str, district: str,
                         Minimum Age: {session.get('min_age_limit')}
                         Shots Available: {session.get('available_capacity')} (Dose 1: {session.get('available_capacity_dose1', '-')}; Dose 2: {session.get('available_capacity_dose2', '-')})
                         Vaccine Type: {session.get('vaccine', '')}
-                        Fees: {center.get('fee_type')} (₹{center.get('fee', '-')})
+                        Fees: {center.get('fee_type')}
                         '''),
                         inline=False
                     )
@@ -282,7 +283,7 @@ async def on_ready() -> None:
     )
     while True:
         await mention_users()
-        await asyncio.sleep(60 * 10)
+        await asyncio.sleep(60 * 30)
 
 
 @client.event
